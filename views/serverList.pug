@@ -1,0 +1,11 @@
+html
+  head
+    title= title
+  body
+    p(onclick='handleToken()')= message
+    p
+      a(href='/game/serverlist') server list
+    p
+      a(href='/game/gameboard') game board
+    
+    script(src='/javascripts/serverList.js')

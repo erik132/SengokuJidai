@@ -1,0 +1,13 @@
+html
+  head
+    title= title
+  body
+    h1= message
+    form(action='/auth/login' method='post')
+      label(name='userlabel') user:
+      input(type='text' name='user')
+      label(name='passwordlabel') password:
+      input(type='password' name='password')
+      input(type='submit' value='submit')
+    p
+      a(href='/auth/createuser') Create User

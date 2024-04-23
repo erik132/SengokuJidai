@@ -1,0 +1,12 @@
+html
+  head
+    title Create User
+  body
+    h1 Select your user and password
+    form(action='/auth/createuser' method='post')
+      label(name='userlabel') user:
+      input(type='text' name='user')
+      br
+      label(name='passwordlabel') password:
+      input(type='password' name='password')
+      input(type='submit' value='submit')
