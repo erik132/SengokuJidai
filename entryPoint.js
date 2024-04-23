@@ -3,7 +3,7 @@ const app = express();
 
 const general = require("./generalConstants.js");
 const index_routes = require("./index/indexRouter.js");
-const loginRouter = require("./auth/loginRouter.js");
+const loginRouter = require("./auth/userRouter.js");
 var cookieParser = require('cookie-parser');
 const gameRouter = require("./game/gameRouter.js");
 

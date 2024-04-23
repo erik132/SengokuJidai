@@ -5,7 +5,7 @@ const  {
     doLogin,
     showCreateUser,
     createUser
-} = require("./loginImpl.js");
+} = require("./userImpl.js");
 
 router.post("/login", doLogin);
 router.get("/createuser", showCreateUser);

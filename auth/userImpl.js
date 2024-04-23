@@ -15,7 +15,7 @@ const doLogin = ((req, res) => {
 
         const user = String(fields.user);
         const password = String(fields.password);
-        connections.query('SELECT id, name, password, secret FROM users WHERE name=?', [user], async (err, rows, fields) =>{
+        connections.query('SELECT id, name, password FROM users WHERE name=?', [user], async (err, rows, fields) =>{
             if(err) {
                 res.status(500).send('Internal server error');
                 console.error(err);
@@ -72,7 +72,7 @@ const createUser = ((req, res, next) => {
                 console.error(err);
                 return;
             }
-            connections.query('INSERT INTO users(name, password, secret) VALUES(?,?,?);', [user, hash, secretSalt] , async (err, rows, fields) => {
+            connections.query('INSERT INTO users(name, password) VALUES(?,?);', [user, hash] , async (err, rows, fields) => {
                 if(err) {
                     res.status(401).send('Try another username');
                     console.error(err);
