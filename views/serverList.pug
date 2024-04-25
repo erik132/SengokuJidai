@@ -1,11 +1,29 @@
 html
   head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
     title= title
+    link(rel="stylesheet", href="/bulma.min.css", type="text/css")
   body
-    p(onclick='handleToken()')= message
-    p
-      a(href='/game/serverlist') server list
-    p
-      a(href='/game/gameboard') game board
+    section(class="section")
+      div(class="container")
+        h1(class="title" onclick='handleToken()')= message
+        p
+          a(href='/game/serverlist') server list
+        p
+          a(href='/game/gameboard') game board
+
+        ul
+          each val in game_list
+            li(class="field is-grouped box is-medium is-success")
+              label(class="ml-2")= val.id
+              label(class="ml-2")= val.name
+              label(class="ml-2")= val.state
+              label(class="ml-2")= val.map_name
+              label(class="ml-2")= val.map_file_name
+              label(class="ml-2")= val.current_players
+              label(class="ml-2")= val.max_players
+              a(href="/game/createGame/?id=" + val.id class="button is-link is-small" align-right) JOIN
+
     
     script(src='/javascripts/serverList.js')

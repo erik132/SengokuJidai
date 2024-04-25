@@ -8,6 +8,7 @@ module.exports = {
 	indexPath: '/',
 	loginPath: '/',
 	userArrivalPath: "/game/serverlist",
+	serverListPath: "/game/serverlist",
 	createUserPath: '/auth/createuser',
 
 };
