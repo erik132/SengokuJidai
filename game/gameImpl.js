@@ -5,7 +5,6 @@ const generalConst = require("../generalConstants.js");
 
 
 const getServerList = ((req, res) => {
-	console.log(req[generalConst.userIdField]);
 	connections.query('SELECT id, name, state, map_name, map_file_name, current_players, max_players FROM games_view', async (err, rows, fields) => {
 		if(err) {
             res.status(500).send('Internal server error');
@@ -33,7 +32,6 @@ const getCreateGame = ((req, res) => {
 				res.redirect(url.format({pathname: generalConst.serverListPath, query: {reason: 'database_error'} }));
 				return;
 			}
-			console.log(testRows);
 			if(testRows[0].id == null){
 				res.redirect(url.format({pathname: generalConst.serverListPath, query: {reason: 'can_not_join_game'} }));
 				return;
@@ -44,7 +42,7 @@ const getCreateGame = ((req, res) => {
 		const incomingName = req.query.gamename;
 		if(incomingName){
 			const gameName = String(incomingName);
-			console.log("the game name: " + gameName);
+			
 			connections.execute('SELECT create_game(?, ?) AS id;', [gameName, userId], async (gameErr, gameRows, gameFields) => {
 				if(gameErr){
 					console.log(gameErr);
@@ -63,8 +61,26 @@ const getCreateGame = ((req, res) => {
 	
 });
 
+const getPlayerList = ((req, res) => {
+	const incomingId = req.query.gameid;
+	if(incomingId){
+		const processedId = Number(incomingId);
+		connections.query("SELECT player_name FROM player_list_view WHERE game_id=?", [processedId], async (err, rows, fields) => {
+			if(err){
+				res.status(500).send('Internal server error');
+				return;
+			}
+			res.json(rows);
+		});
+	}else{
+		res.status(500).send('Game id not supplied');
+	}
+	
+});
+
 module.exports = {
 	getServerList,
 	getGameBoard,
-	getCreateGame
+	getCreateGame,
+	getPlayerList
 }

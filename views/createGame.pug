@@ -1,6 +1,18 @@
 html
   head
     title= title
+    script(type="importmap") {"imports": {"vue": "/vue.js"}}
+    script(src="/axios.js")
   body
     p Create game here
-    h1=game_id
+    a(href="/game/serverList") Back to servers
+    input(hidden id="gameId" value=game_id)
+
+    div(id="playerList") {{message}}
+        
+    
+    
+    script(type="module" src="/javascripts/createGameVue.js")
+    script(src="/javascripts/createGame.js")
+    
+    
