@@ -1,14 +1,22 @@
 html
   head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
     title= title
     script(type="importmap") {"imports": {"vue": "/vue.js"}}
     script(src="/axios.js")
+    link(rel="stylesheet", href="/bulma.min.css", type="text/css")
   body
-    p Create game here
-    a(href="/game/serverList") Back to servers
     input(hidden id="gameId" value=game_id)
+    section(class="section")
+      div(class="container")
+        div(id="playerList")
+          template
+          
+    a(href="/game/serverList") Back to servers
+        
 
-    div(id="playerList") {{message}}
+
         
     
     

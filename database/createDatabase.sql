@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS game_states;
 DROP TABLE IF EXISTS maps;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS factions;
 
 
 
@@ -33,6 +34,10 @@ CREATE TABLE participants(user_id INT NOT NULL, game_id INT NOT NULL, UNIQUE KEY
 INSERT INTO participants(user_id, game_id) VALUES(1,1);
 INSERT INTO participants(user_id, game_id) VALUES(2,2);
 INSERT INTO participants(user_id, game_id) VALUES(3,2);
+
+CREATE TABLE factions(id INT UNIQUE, name VARCHAR(255) NOT NULL, color VARCHAR(255) NOT NULL);
+INSERT INTO factions(id, name, color) VALUES(1, 'Takeda', 'Red');
+INSERT INTO factions(id, name, color) VALUES(2, 'Date', 'Blue');
 
 CREATE VIEW games_view AS SELECT g.id, g.name, count(p.user_id) AS current_players, g.max_players, gs.name AS state, m.name AS map_name, m.file_name AS map_file_name FROM participants p LEFT JOIN games g ON p.game_id=g.id LEFT JOIN game_states gs ON g.state=gs.id LEFT JOIN maps m ON g.map_id=m.id WHERE g.state IN (1,2) GROUP BY game_id;
 
