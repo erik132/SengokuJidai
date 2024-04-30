@@ -1,31 +1,72 @@
 import {createApp, ref} from 'vue'
-//import VersusComponent from "./versusComponent.vue"
 
 
 
 createApp({
     data() {
         return {
-            message: 'You are playing with.'
+            message: 'You are playing with.',
+            gameId: 0,
+            readiness: 0,
+            readinessPoller: null
         }
     },
     setup(){
         
     },
     created(){
-        
+        this.gameId = document.getElementById("gameId").value
+        this.checkForStart()
+        this.readinessPoller = setInterval(this.checkForStart, 5000)
     },
     mounted(){
-        this.getPlayerList(document.getElementById("gameId").value)
+        
+        this.getPlayerList()
+        this.getReadiness()
     },
     methods: {
-        getPlayerList(gameId){
-            axios.get("/game/getPlayerList/?gameid=" + gameId).then((response) =>{
+        getPlayerList(){
+            axios.get("/game/getPlayerList/?gameid=" + this.gameId).then((response) => {
                 this.message = response.data
             }).catch((error)=>{
-                console.log("error on player list aquisition")
+                console.log("error on player list aquisition: " + error.response.data)
                 console.log(error.data)
                 this.message = "Player List can not be shown"
+            })
+        },
+        setPlayerReady(){
+            axios.post("/game/readyPlayer", {gameid: this.gameId}).then((response) => {
+                this.readiness = response.data.readiness
+            }).catch((error)=>{
+                console.log("we got a set ready error:" + error.response.data)
+                console.log(error)
+            })
+        },
+        setPlayerUnReady(){
+            axios.post("/game/unreadyPlayer", {gameid: this.gameId}).then((response) => {
+                this.readiness = response.data.readiness
+            }).catch((error)=>{
+                console.log("we got a set unready error: " + error.response.data)
+                console.log(error)
+            })
+        },
+        getReadiness(){
+            axios.get("/game/getReadiness/?gameid="  + this.gameId).then((response) => {
+                this.readiness = response.data.readiness
+            }).catch((error)=>{
+                console.log("we got a get readiness error: " + error.response.data)
+                console.log(error)
+            })
+        },
+        checkForStart(){
+            axios.get("/game/getStart/?gameid=" + this.gameId).then((response) => {
+                const isReadyToStart = response.data.readiness
+                if(isReadyToStart ==1){
+                    window.location.href="/game/gameboard/?gameid=" + this.gameId
+                }
+            }).catch((error)=>{
+                console.log("we got a game start error: " + error.response.data)
+                console.log(error)
             })
         }
     },
@@ -42,7 +83,16 @@ createApp({
     </div>
     <div class="columns">
         <div class="column"></div>
-        <div class="column is-one-fifth has-text-centered"><div class="button is-large">Ready</div></div>
+        <div class="column is-one-fifth has-text-centered">
+            <div class="icon-text button is-large" v-on:click="setPlayerReady" v-if="readiness==0">
+                <span>Ready</span>
+                <span class="icon has-text-danger is-small"><i class="fas fa-solid fa-circle-xmark"></i></span>
+            </div>
+            <div class="icon-text button is-large" v-on:click="setPlayerUnReady" v-if="readiness==1">
+                <span>Unready</span>
+                <span class="icon has-text-success is-small"><i class="fas fa-solid fa-check"></i></span>
+            </div>
+        </div>
         <div class="column"></div>
     </div>
     `

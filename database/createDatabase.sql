@@ -1,5 +1,8 @@
+DROP PROCEDURE IF EXISTS ready_player;
+
 DROP FUNCTION IF EXISTS create_game;
 DROP FUNCTION IF EXISTS join_game;
+DROP FUNCTION IF EXISTS is_game_ready;
 
 DROP VIEW IF EXISTS games_view;
 DROP VIEW IF EXISTS player_list_view;
@@ -20,7 +23,7 @@ INSERT INTO users(name, password) VALUES('erik3', '$2b$10$evaolD0oXGXV/96.SfG3f.
 
 CREATE TABLE games(id INT UNIQUE AUTO_INCREMENT, name VARCHAR(255) NOT NULL, state INT NOT NULL, map_id INT NOT NULL, max_players INT NOT NULL, PRIMARY KEY (id));
 INSERT INTO games(name, state, map_id, max_players) VALUES('erik room', 1, 1, 2);
-INSERT INTO games(name, state, map_id, max_players) VALUES('doom mode', 2, 1, 2);
+INSERT INTO games(name, state, map_id, max_players) VALUES('doom mode', 1, 1, 2);
 
 CREATE TABLE maps(id INT UNIQUE NOT NULL, name VARCHAR(255) UNIQUE NOT NULL, file_name VARCHAR(255) NOT NULL);
 INSERT INTO maps(id, name, file_name) VALUES(1, 'Grasslands', 'grasslands.jpg');
@@ -30,10 +33,10 @@ INSERT INTO game_states(id, name) VALUES(1, 'waiting for players');
 INSERT INTO game_states(id, name) VALUES(2, 'In Progress');
 INSERT INTO game_states(id, name) VALUES(3, 'Concluded');
 
-CREATE TABLE participants(user_id INT NOT NULL, game_id INT NOT NULL, UNIQUE KEY main_index(user_id, game_id));
-INSERT INTO participants(user_id, game_id) VALUES(1,1);
-INSERT INTO participants(user_id, game_id) VALUES(2,2);
-INSERT INTO participants(user_id, game_id) VALUES(3,2);
+CREATE TABLE participants(user_id INT NOT NULL, game_id INT NOT NULL, is_ready TINYINT NOT NULL DEFAULT 0, faction_id INT NOT NULL DEFAULT 1, UNIQUE KEY main_index(user_id, game_id));
+INSERT INTO participants(user_id, game_id, faction_id) VALUES(1,1,1);
+INSERT INTO participants(user_id, game_id, faction_id) VALUES(2,2,1);
+INSERT INTO participants(user_id, game_id, faction_id) VALUES(3,2,2);
 
 CREATE TABLE factions(id INT UNIQUE, name VARCHAR(255) NOT NULL, color VARCHAR(255) NOT NULL);
 INSERT INTO factions(id, name, color) VALUES(1, 'Takeda', 'Red');
@@ -65,6 +68,7 @@ BEGIN
 	DECLARE user_count INT;
 	DECLARE max_players INT;
 	DECLARE test_id INT;
+	DECLARE lock_test INT;
 	SELECT p.game_id INTO test_id FROM participants p where p.user_id=user_id AND p.game_id=game_id;
 	SELECT g.state, g.max_players INTO game_state, max_players FROM games g WHERE id=game_id;
 
@@ -73,16 +77,48 @@ BEGIN
 	END IF;
 
 	IF(test_id IS NULL) THEN
+		SELECT GET_LOCK('participants_lock', 10) INTO lock_test;
+		IF(lock_test <> 1) THEN
+			RETURN NULL;
+		END IF;
 		SELECT count(*) INTO user_count FROM participants p WHERE p.game_id=game_id;
 
 		IF(user_count < max_players) THEN
 			INSERT INTO participants(user_id, game_id) VALUES(user_id, game_id);
+			SELECT RELEASE_LOCK('participants_lock') INTO lock_test;
 		ELSE
+			SELECT RELEASE_LOCK('participants_lock') INTO lock_test;
 			RETURN NULL;
 		END IF;
 	END IF;
 	
 	RETURN game_state;
+END$$
+
+CREATE PROCEDURE ready_player(game_id INT, user_id INT, readiness TINYINT)
+BEGIN
+	UPDATE participants p SET p.is_ready=readiness WHERE p.game_id=game_id AND p.user_id=user_id;
+END$$
+
+
+#Game starts when we the maximum allowed players are ready.
+#Yes, rooms need to be full.
+#Might revise this rule if 4 player FFA comes out.
+CREATE FUNCTION is_game_ready(game_id INT)
+RETURNS INT
+BEGIN
+	DECLARE readiness_count INT;
+	DECLARE max_players INT;
+	SELECT count(is_ready), IFNULL(g.max_players, 10000) INTO readiness_count, max_players FROM participants p RIGHT JOIN games g ON p.game_id=g.id WHERE p.game_id=game_id AND p.is_ready=1 AND g.state <> 3;
+
+
+	IF(readiness_count = max_players) THEN
+		UPDATE games SET state=2 WHERE id=game_id;
+		RETURN 1;
+	END IF;
+
+
+	RETURN 0;
 END$$
 
 delimiter ;
