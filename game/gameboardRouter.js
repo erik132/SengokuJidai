@@ -1,0 +1,16 @@
+const express = require("express");
+const router = express.Router();
+
+const  { 
+    getGameBoard,
+    getGameState
+} = require("./gameboardImpl.js");
+
+//page servers
+router.get("/gameboard", getGameBoard);
+
+//API
+router.get("/getGameState", getGameState);
+
+
+module.exports = router;

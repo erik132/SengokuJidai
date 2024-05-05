@@ -3,7 +3,6 @@ const router = express.Router();
 
 const  { 
     getServerList,
-    getGameBoard,
     getCreateGame,
     getPlayerList,
     readyPlayer,
@@ -14,7 +13,6 @@ const  {
 
 //page servers
 router.get("/serverlist", getServerList);
-router.get("/gameboard", getGameBoard);
 router.get("/creategame", getCreateGame);
 router.get("/getPlayerList", getPlayerList);
 

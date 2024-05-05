@@ -6,6 +6,7 @@ DROP FUNCTION IF EXISTS is_game_ready;
 
 DROP VIEW IF EXISTS games_view;
 DROP VIEW IF EXISTS player_list_view;
+DROP VIEW IF EXISTS game_info_view;
 
 DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS game_states;
@@ -13,6 +14,7 @@ DROP TABLE IF EXISTS maps;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS factions;
+DROP TABLE IF EXISTS game_modes;
 
 
 
@@ -21,12 +23,15 @@ INSERT INTO users(name, password) VALUES('erik', '$2b$10$fLH61NVTfQu6Scuz6J4JNe8
 INSERT INTO users(name, password) VALUES('erik2', '$2b$10$5RO8UOMU5l9F5yfccafX7ulynQ0cH5QDqiTqzjZYjoYbN2seZXNpy');
 INSERT INTO users(name, password) VALUES('erik3', '$2b$10$evaolD0oXGXV/96.SfG3f.jDin6fDa5NMwgS/tpH2btnjRH96QJyu');
 
-CREATE TABLE games(id INT UNIQUE AUTO_INCREMENT, name VARCHAR(255) NOT NULL, state INT NOT NULL, map_id INT NOT NULL, max_players INT NOT NULL, PRIMARY KEY (id));
-INSERT INTO games(name, state, map_id, max_players) VALUES('erik room', 1, 1, 2);
-INSERT INTO games(name, state, map_id, max_players) VALUES('doom mode', 1, 1, 2);
+CREATE TABLE games(id INT UNIQUE AUTO_INCREMENT, name VARCHAR(255) NOT NULL, state INT NOT NULL, map_id INT NOT NULL, max_players INT NOT NULL, mode_id INT NOT NULL, PRIMARY KEY (id));
+INSERT INTO games(name, state, map_id, max_players, mode_id) VALUES('erik room', 1, 1, 2, 1);
+INSERT INTO games(name, state, map_id, max_players, mode_id) VALUES('doom mode', 1, 1, 2, 1);
 
 CREATE TABLE maps(id INT UNIQUE NOT NULL, name VARCHAR(255) UNIQUE NOT NULL, file_name VARCHAR(255) NOT NULL);
 INSERT INTO maps(id, name, file_name) VALUES(1, 'Grasslands', 'grasslands.jpg');
+
+CREATE TABLE game_modes(id INT UNIQUE, name VARCHAR(255) NOT NULL, size_x INT NOT NULL, size_y INT NOT NULL, PRIMARY KEY(id));
+INSERT INTO game_modes(id, name, size_x, size_y) VALUES(1, 'Standard 1vs1', 8, 8);
 
 CREATE TABLE game_states(id INT UNIQUE NOT NULL, name VARCHAR(255) NOT NULL, PRIMARY KEY (id));
 INSERT INTO game_states(id, name) VALUES(1, 'waiting for players');
@@ -38,13 +43,16 @@ INSERT INTO participants(user_id, game_id, faction_id) VALUES(1,1,1);
 INSERT INTO participants(user_id, game_id, faction_id) VALUES(2,2,1);
 INSERT INTO participants(user_id, game_id, faction_id) VALUES(3,2,2);
 
-CREATE TABLE factions(id INT UNIQUE, name VARCHAR(255) NOT NULL, color VARCHAR(255) NOT NULL);
+CREATE TABLE factions(id INT UNIQUE, name VARCHAR(255) NOT NULL, color VARCHAR(255) NOT NULL, PRIMARY KEY(id));
 INSERT INTO factions(id, name, color) VALUES(1, 'Takeda', 'Red');
 INSERT INTO factions(id, name, color) VALUES(2, 'Date', 'Blue');
 
-CREATE VIEW games_view AS SELECT g.id, g.name, count(p.user_id) AS current_players, g.max_players, gs.name AS state, m.name AS map_name, m.file_name AS map_file_name FROM participants p LEFT JOIN games g ON p.game_id=g.id LEFT JOIN game_states gs ON g.state=gs.id LEFT JOIN maps m ON g.map_id=m.id WHERE g.state IN (1,2) GROUP BY game_id;
+
+CREATE VIEW games_view AS SELECT g.id, g.name, count(p.user_id) AS current_players, g.max_players, gs.name AS state, m.name AS map_name, m.file_name AS map_file_name, gm.name AS mode_name, gm.size_x, gm.size_y FROM participants p LEFT JOIN games g ON p.game_id=g.id LEFT JOIN game_states gs ON g.state=gs.id LEFT JOIN maps m ON g.map_id=m.id LEFT JOIN game_modes gm ON g.mode_id=gm.id WHERE g.state IN (1,2) GROUP BY game_id;
 
 CREATE VIEW player_list_view AS SELECT u.name AS player_name, p.game_id AS game_id FROM participants p LEFT JOIN users u ON p.user_id=u.id;
+
+CREATE VIEW game_info_view AS SELECT g.id, gm.size_x, gm.size_y, m.name AS map_name, m.file_name AS map_file_name FROM games g LEFT JOIN game_modes gm ON g.mode_id=gm.id LEFT JOIN maps m ON g.map_id=m.id;
 
 delimiter $$
 

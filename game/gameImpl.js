@@ -1,4 +1,3 @@
-var jwt = require('jsonwebtoken');
 const url = require('url');
 const connections = require('../database/connectionHolder.js');
 const generalConst = require("../generalConstants.js");
@@ -7,18 +6,13 @@ const generalConst = require("../generalConstants.js");
 const getServerList = ((req, res) => {
 	connections.query('SELECT id, name, state, map_name, map_file_name, current_players, max_players FROM games_view', async (err, rows, fields) => {
 		if(err) {
+			console.error(err);
             res.status(500).send('Internal server error');
-            console.error(err);
             return;
         }
         res.render('serverList', { title: generalConst.appDisplayTitle, message: 'Login for war ', game_list: rows });
 	});
 	
-});
-
-const getGameBoard = ((req, res) => {
-	console.log(req[generalConst.userIdField]);
-	res.render('gameboard', { title: generalConst.appDisplayTitle });
 });
 
 const getCreateGame = ((req, res) => {
@@ -146,7 +140,6 @@ const getGameStart = ((req, res) => {
 
 module.exports = {
 	getServerList,
-	getGameBoard,
 	getCreateGame,
 	getPlayerList,
 	readyPlayer,

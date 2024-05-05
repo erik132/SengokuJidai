@@ -62,7 +62,7 @@ createApp({
             axios.get("/game/getStart/?gameid=" + this.gameId).then((response) => {
                 const isReadyToStart = response.data.readiness
                 if(isReadyToStart ==1){
-                    window.location.href="/game/gameboard/?gameid=" + this.gameId
+                    window.location.href="/gameboard/gameboard/?gameid=" + this.gameId
                 }
             }).catch((error)=>{
                 console.log("we got a game start error: " + error.response.data)

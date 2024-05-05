@@ -1,0 +1,10 @@
+.tile-stretch{
+	width: 10vh;
+	height: 10vh;
+}
+
+.map-tile{
+	appearance: none;
+    border-radius: 0px;
+	border: 2px solid black;
+}
