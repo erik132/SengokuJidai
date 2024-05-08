@@ -29,18 +29,43 @@ const getGameState = ((req, res) => {
 	const gameId = req.query.gameid;
 	if(gameId){
 		const processedId = Number(gameId);
-		connections.query("SELECT size_x, size_y, map_name, map_file_name FROM game_info_view WHERE id=?;", [processedId], async (err, rows, fields) => {
+		connections.query("SELECT size_x, size_y, map_name, map_file_name FROM game_info_view WHERE id=?;", [processedId], async (gameErr, gameRows, gameFields) => {
+			if(gameErr){
+				console.error(gameErr);
+				res.status(500).send('Internal server error');
+            	return;
+			}
+			if(gameRows.length != 1){
+				console.log("Error: getting gamestate returned " + gameRows.length + " rows instead of 1.");
+				res.status(500).send("Something wrong with your game id.");
+				return;
+			}
+			connections.execute("CALL get_unit_states(?);", [processedId], async (unitErr, unitRows, unitFields) =>{
+				if(unitErr){
+					console.error(unitErr);
+					res.status(500).send('Internal server error');
+	            	return;
+				}
+				res.json({sizeX: gameRows[0].size_x, sizeY: gameRows[0].size_y, mapName: gameRows[0].map_name, mapFileName: gameRows[0].map_file_name, unitData: unitRows[0]});
+			});
+			
+		});
+	}else{
+		res.setStatus(500).send("Incorrect game Id");
+	}
+});
+
+const getUnitStates = ((req, res) => {
+	const gameId = req.query.gameid;
+	if(gameId){
+		const processedId = Number(gameId);
+		connections.query("SELECT unique_id, unit_id, grid_x, grid_y, faction_id FROM game_nr_?;", [processedId], async (err, rows, fields) =>{
 			if(err){
 				console.error(err);
 				res.status(500).send('Internal server error');
             	return;
 			}
-			if(rows.length != 1){
-				console.log("Error: getting gamestate returned " + rows.length + " rows instead of 1.");
-				res.status(500).send("Something wrong with your game id.");
-				return;
-			}
-			res.json({sizeX: rows[0].size_x, sizeY: rows[0].size_y, mapName: rows[0].map_name, mapFileName: rows[0].map_file_name});
+			res.json({unitData: rows});
 		});
 	}else{
 		res.setStatus(500).send("Incorrect game Id");
@@ -50,5 +75,6 @@ const getGameState = ((req, res) => {
 
 module.exports = {
 	getGameBoard,
-	getGameState
+	getGameState,
+	getUnitStates
 }

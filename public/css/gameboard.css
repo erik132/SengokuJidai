@@ -1,3 +1,14 @@
+.unit-tile{
+	position: absolute;
+	z-index: 100;
+	transition: transform 1s;
+}
+
+.unit-stretch{
+	width: 8vh;
+	height: 8vh;
+}
+
 .tile-stretch{
 	width: 10vh;
 	height: 10vh;
@@ -7,4 +18,12 @@
 	appearance: none;
     border-radius: 0px;
 	border: 2px solid black;
+}
+
+.is-takeda{
+	border: 2px solid red;
+}
+
+.is-date{
+	border: 2px solid blue;
 }

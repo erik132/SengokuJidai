@@ -1,4 +1,5 @@
 DROP PROCEDURE IF EXISTS ready_player;
+DROP PROCEDURE IF EXISTS get_unit_states;
 
 DROP FUNCTION IF EXISTS create_game;
 DROP FUNCTION IF EXISTS join_game;
@@ -15,6 +16,8 @@ DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS factions;
 DROP TABLE IF EXISTS game_modes;
+DROP TABLE IF EXISTS units;
+DROP TABLE IF EXISTS unit_default_setup;
 
 
 
@@ -47,6 +50,35 @@ CREATE TABLE factions(id INT UNIQUE, name VARCHAR(255) NOT NULL, color VARCHAR(2
 INSERT INTO factions(id, name, color) VALUES(1, 'Takeda', 'Red');
 INSERT INTO factions(id, name, color) VALUES(2, 'Date', 'Blue');
 
+CREATE TABLE units(id INT UNIQUE, name VARCHAR(255) NOT NULL, img_file_name VARCHAR(255) NOT NULL, attack INT NOT NULL, range_attack INT DEFAULT NULL, defence_skill INT NOT NULL, armor INT NOT NULL, PRIMARY KEY(id));
+INSERT INTO units(id, name, img_file_name, attack, defence_skill, armor) VALUES(1, 'Katana Samurai', 'katanaSamurai.jpg', 15, 15, 15);
+INSERT INTO units(id, name, img_file_name, attack, defence_skill, armor) VALUES(2, 'Naginata Samurai', 'naginataSamurai.jpg', 12, 18, 15);
+INSERT INTO units(id, name, img_file_name, attack, defence_skill, armor, range_attack) VALUES(3, 'Yumi Samurai', 'yumiSamurai.jpg', 7, 11, 13, 14);
+INSERT INTO units(id, name, img_file_name, attack, defence_skill, armor) VALUES(4, 'Yari Ashigaru', 'yariAshigaru.jpg', 9, 10, 10);
+
+#x and y coords start from 0 and the start point is the upper left corner of the gameboard
+CREATE TABLE unit_default_setup(game_mode_id INT NOT NULL, unit_id INT NOT NULL, grid_x INT NOT NULL, grid_y INT NOT NULL, faction_id INT NOT NULL);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 1, 3, 1, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 1, 4, 1, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 2, 2, 1, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 2, 5, 1, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 4, 1, 1, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 4, 6, 1, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 3, 2, 0, 1);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 3, 5, 0, 1);
+
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 1, 3, 6, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 1, 4, 6, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 2, 2, 6, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 2, 5, 6, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 4, 1, 6, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 4, 6, 6, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 3, 2, 7, 2);
+INSERT INTO unit_default_setup(game_mode_id, unit_id, grid_x, grid_y, faction_id) VALUES(1, 3, 5, 7, 2);
+
+#Turn those into a procedure.
+#CREATE TABLE game_nr_2(unique_id INT UNIQUE AUTO_INCREMENT,unit_id INT NOT NULL, grid_x INT NOT NULL, grid_y INT NOT NULL, faction_id INT NOT NULL, health INT NOT NULL DEFAULT 100);
+#INSERT INTO game_nr_2(unit_id, grid_x, grid_y, faction_id) SELECT unit_id, grid_x, grid_y, faction_id FROM unit_default_setup WHERE game_mode_id = 1;
 
 CREATE VIEW games_view AS SELECT g.id, g.name, count(p.user_id) AS current_players, g.max_players, gs.name AS state, m.name AS map_name, m.file_name AS map_file_name, gm.name AS mode_name, gm.size_x, gm.size_y FROM participants p LEFT JOIN games g ON p.game_id=g.id LEFT JOIN game_states gs ON g.state=gs.id LEFT JOIN maps m ON g.map_id=m.id LEFT JOIN game_modes gm ON g.mode_id=gm.id WHERE g.state IN (1,2) GROUP BY game_id;
 
@@ -127,6 +159,15 @@ BEGIN
 
 
 	RETURN 0;
+END$$
+
+CREATE PROCEDURE get_unit_states(game_id INT)
+BEGIN
+	DECLARE dynamic_query TEXT;
+	SET dynamic_query = CONCAT('SELECT gn.unique_id, gn.unit_id, u.name, u.img_file_name, gn.grid_x, gn.grid_y, gn.faction_id, f.name AS faction_name, gn.health FROM game_nr_', game_id, ' gn LEFT JOIN units u ON gn.unit_id=u.id LEFT JOIN factions f ON gn.faction_id=f.id;');
+	PREPARE stmt1 FROM dynamic_query; 
+	EXECUTE stmt1; 
+	DEALLOCATE PREPARE stmt1;
 END$$
 
 delimiter ;
